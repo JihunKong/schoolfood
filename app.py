@@ -17,9 +17,14 @@ def get_school_info(school_name):
         "pIndex": 1,
         "pSize": 100
     }
-    response = requests.get(url, params=params)
-    data = response.json()
-    return data.get('schoolInfo', [{}])[1].get('row', [])
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()  # Raises a HTTPError if the status is 4xx, 5xx
+        data = response.json()
+        return data.get('schoolInfo', [{}])[1].get('row', [])
+    except requests.exceptions.RequestException as e:
+        st.error(f"학교 정보를 가져오는 중 오류 발생: {str(e)}")
+        return []
 
 def get_meal_info(edu_office_code, school_code, date):
     url = "https://open.neis.go.kr/hub/mealServiceDietInfo"
@@ -32,15 +37,24 @@ def get_meal_info(edu_office_code, school_code, date):
         "pIndex": 1,
         "pSize": 100
     }
-    response = requests.get(url, params=params)
-    data = response.json()
-    return data.get('mealServiceDietInfo', [{}])[1].get('row', [])
+    try:
+        response = requests.get(url, params=params)
+        response.raise_for_status()  # Raises a HTTPError if the status is 4xx, 5xx
+        data = response.json()
+        meal_service_diet_info = data.get('mealServiceDietInfo', [])
+        if len(meal_service_diet_info) > 1:
+            return meal_service_diet_info[1].get('row', [])
+        else:
+            return []
+    except requests.exceptions.RequestException as e:
+        st.error(f"급식 정보를 가져오는 중 오류 발생: {str(e)}")
+        return []
 
 def get_gpt_summary(meal_info):
     prompt = f"다음은 오늘의 급식 메뉴입니다: {meal_info}. 이 메뉴에 대해 간단히 요약해주세요."
     try:
         completion = client.chat.completions.create(
-            model="gpt-3.5-turbo",  # 또는 "gpt-4"와 같은 다른 사용 가능한 모델
+            model="gpt-4o-mini",
             messages=[
                 {"role": "system", "content": "당신은 학교 급식 메뉴를 분석하고 요약하는 전문가입니다."},
                 {"role": "user", "content": prompt}
