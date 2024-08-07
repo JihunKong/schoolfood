@@ -65,6 +65,10 @@ def get_gpt_summary(meal_info):
         st.error(f"OpenAI API 오류: {str(e)}")
         return "요약 생성 중 오류가 발생했습니다."
 
+def clean_meal_info(meal_info):
+    """HTML 태그를 제거하고 급식 정보를 깔끔하게 정리합니다."""
+    return meal_info.repalce('<br/>', '\n')
+
 st.title("학교 급식 검색 앱")
 
 school_name = st.text_input("학교 이름을 입력하세요")
@@ -83,10 +87,14 @@ if school_name:
             if meal_info:
                 st.subheader("오늘의 급식")
                 for meal in meal_info:
-                    st.write(f"{meal['MMEAL_SC_NM']}: {meal['DDISH_NM']}")
+                    st.write(f"**{meal['MMEAL_SC_NM']}**")
+                    clean_menu = clean_meal_info(meal['DDISH_NM'])
+                    st.text(clean_menu)
                     
-                    summary = get_gpt_summary(meal['DDISH_NM'])
-                    st.write("GPT 요약:", summary)
+                    summary = get_gpt_summary(clean_menu)
+                    st.write("**GPT 요약:**")
+                    st.write(summary)
+                    st.write("---")  # 각 식사 정보 사이에 구분선 추가
             else:
                 st.write("해당 날짜의 급식 정보가 없습니다.")
     else:
