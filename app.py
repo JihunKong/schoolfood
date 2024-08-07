@@ -54,7 +54,7 @@ def get_gpt_summary(meal_info):
     prompt = f"다음은 오늘의 급식 메뉴입니다: {meal_info}. 이 메뉴에 대해 간단히 요약해주세요."
     try:
         completion = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-3.5-turbo",  # gpt-4o-mini 모델이 존재하지 않아 gpt-3.5-turbo로 변경
             messages=[
                 {"role": "system", "content": "당신은 학교 급식 메뉴를 분석하고 요약하는 전문가입니다."},
                 {"role": "user", "content": prompt}
@@ -67,7 +67,7 @@ def get_gpt_summary(meal_info):
 
 def clean_meal_info(meal_info):
     """HTML 태그를 제거하고 급식 정보를 깔끔하게 정리합니다."""
-    return meal_info.repalce('<br/>', '\n')
+    return meal_info.replace('<br/>', '\n')  # 'repalce'를 'replace'로 수정
 
 st.title("학교 급식 검색 앱")
 
