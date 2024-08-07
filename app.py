@@ -1,13 +1,12 @@
 import streamlit as st
 import requests
-import json
-import openai
+from openai import OpenAI
 
 # NEIS API 키 설정
-NEIS_API_KEY = "bad69babd5034282a754c2b8b364ea53"
+NEIS_API_KEY = st.secrets["api_keys"]["neis"]
 
-# OpenAI API 키 설정 (실제 키로 교체해야 함)
-openai.api_key = "your_openai_api_key_here"
+# OpenAI 클라이언트 설정
+client = OpenAI(api_key=st.secrets["api_keys"]["openai"])
 
 def get_school_info(school_name):
     url = "https://open.neis.go.kr/hub/schoolInfo"
@@ -39,12 +38,18 @@ def get_meal_info(edu_office_code, school_code, date):
 
 def get_gpt_summary(meal_info):
     prompt = f"다음은 오늘의 급식 메뉴입니다: {meal_info}. 이 메뉴에 대해 간단히 요약해주세요."
-    response = openai.Completion.create(
-        engine="text-davinci-002",
-        prompt=prompt,
-        max_tokens=150
-    )
-    return response.choices[0].text.strip()
+    try:
+        completion = client.chat.completions.create(
+            model="gpt-3.5-turbo",  # 또는 "gpt-4"와 같은 다른 사용 가능한 모델
+            messages=[
+                {"role": "system", "content": "당신은 학교 급식 메뉴를 분석하고 요약하는 전문가입니다."},
+                {"role": "user", "content": prompt}
+            ]
+        )
+        return completion.choices[0].message.content
+    except Exception as e:
+        st.error(f"OpenAI API 오류: {str(e)}")
+        return "요약 생성 중 오류가 발생했습니다."
 
 st.title("학교 급식 검색 앱")
 
